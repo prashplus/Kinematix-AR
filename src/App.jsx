@@ -6,7 +6,6 @@ import { InspectionOverlay } from './components/InspectionOverlay';
 import { VehicleCarousel } from './components/VehicleCarousel';
 import { VEHICLE_ARCHETYPES } from './vehicles/VehicleConfigs';
 import { soundManager } from './audio/RCAudioEngine';
-import { Volume2, VolumeX, HelpCircle, Sun, Moon } from 'lucide-react';
 
 export function App() {
   const [theme, setTheme] = useState('light');
@@ -73,96 +72,47 @@ export function App() {
         resetPropsAction={() => setPropsAction(null)}
       />
 
-      {/* Top Branding & Quick Audio Bar */}
+      {/* Unified Responsive Top Navigation Bar */}
       <div style={{
         position: 'absolute',
-        top: '16px',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        top: '12px',
+        left: '12px',
+        right: '12px',
         display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        zIndex: 20
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        pointerEvents: 'none',
+        zIndex: 40
       }}>
-        <div className="glass-panel" style={{
-          padding: '8px 18px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          border: '1px solid var(--panel-border)',
-          boxShadow: 'var(--panel-shadow)'
-        }}>
-          <span style={{
-            fontSize: '13px',
-            fontWeight: '900',
-            letterSpacing: '0.15em',
-            background: 'linear-gradient(90deg, var(--accent-cyan), var(--accent-blue))',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            textTransform: 'uppercase'
-          }}>
-            KINEMATIX AR
-          </span>
-          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>|</span>
-          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600' }}>
-            {currentConfig.name}
-          </span>
-        </div>
+        {/* Left: Compact Telemetry HUD */}
+        <TelemetryHUD
+          telemetry={telemetry}
+          vehicleConfig={currentConfig}
+          isInspectMode={isInspectMode}
+        />
 
-        {/* Theme Toggle (Light / Dark) */}
-        <button
-          onClick={toggleTheme}
-          className="btn-action glass-pill"
-          style={{ width: '36px', height: '36px', borderRadius: '50%', padding: 0 }}
-          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-        >
-          {theme === 'light' ? <Moon size={16} color="var(--accent-purple)" /> : <Sun size={16} color="var(--accent-amber)" />}
-        </button>
-
-        {/* Audio Toggle */}
-        <button
-          onClick={handleToggleMute}
-          className="btn-action glass-pill"
-          style={{ width: '36px', height: '36px', borderRadius: '50%', padding: 0 }}
-          title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-        >
-          {isMuted ? <VolumeX size={15} color="var(--accent-red)" /> : <Volume2 size={15} color="var(--accent-cyan)" />}
-        </button>
-
-        {/* Controls Help */}
-        <button
-          onClick={() => setShowHelp(!showHelp)}
-          className="btn-action glass-pill"
-          style={{ width: '36px', height: '36px', borderRadius: '50%', padding: 0 }}
-          title="Controls Guide"
-        >
-          <HelpCircle size={15} color="var(--text-secondary)" />
-        </button>
+        {/* Right: Actions, AR, Garage, and Collapsible Tools Drawer */}
+        <InspectionOverlay
+          isInspectMode={isInspectMode}
+          onToggleInspect={() => setIsInspectMode(!isInspectMode)}
+          onRepairCar={() => setPropsAction({ type: 'repair' })}
+          onRespawnCar={() => setPropsAction({ type: 'respawn' })}
+          onOpenCarousel={() => setIsCarouselOpen(true)}
+          onSpawnWall={() => setPropsAction({ type: 'wall' })}
+          onSpawnRamp={() => setPropsAction({ type: 'ramp' })}
+          onSpawnBarrels={() => setPropsAction({ type: 'barrels' })}
+          onClearProps={() => setPropsAction({ type: 'clear' })}
+          isARActive={arState.active}
+          onToggleAR={() => setPropsAction({ type: 'toggle_ar' })}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          isMuted={isMuted}
+          onToggleMute={handleToggleMute}
+          onOpenHelp={() => setShowHelp(true)}
+        />
       </div>
 
-      {/* Telemetry Dashboard HUD */}
-      <TelemetryHUD
-        telemetry={telemetry}
-        vehicleConfig={currentConfig}
-        isInspectMode={isInspectMode}
-      />
-
-      {/* Inspection Mode & Prop Controls */}
-      <InspectionOverlay
-        isInspectMode={isInspectMode}
-        onToggleInspect={() => setIsInspectMode(!isInspectMode)}
-        onRepairCar={() => setPropsAction({ type: 'repair' })}
-        onRespawnCar={() => setPropsAction({ type: 'respawn' })}
-        onOpenCarousel={() => setIsCarouselOpen(true)}
-        onSpawnWall={() => setPropsAction({ type: 'wall' })}
-        onSpawnRamp={() => setPropsAction({ type: 'ramp' })}
-        onSpawnBarrels={() => setPropsAction({ type: 'barrels' })}
-        onClearProps={() => setPropsAction({ type: 'clear' })}
-        isARActive={arState.active}
-        onToggleAR={() => setPropsAction({ type: 'toggle_ar' })}
-      />
-
-      {/* Dual Stick Virtual RC Transmitter */}
+      {/* Dual Stick Virtual RC Transmitter (PointerCapture Multi-Touch) */}
       <TransmitterControls
         onInputChange={handleInputChange}
         isInspectMode={isInspectMode}
@@ -205,11 +155,9 @@ export function App() {
               <div>
                 <strong style={{ color: 'var(--accent-cyan)' }}>🎮 Driving Controls:</strong>
                 <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
-                  <li><strong>W / Up Arrow:</strong> Throttle Forward</li>
-                  <li><strong>S / Down Arrow:</strong> Brake & Reverse</li>
-                  <li><strong>A / D / Left / Right:</strong> Proportional Steering</li>
-                  <li><strong>Spacebar:</strong> Handbrake / Drift Initiate</li>
-                  <li><strong>Mobile:</strong> Use the Dual-Stick on-screen transmitter</li>
+                  <li><strong>Left Joystick:</strong> Proportional steering left / right.</li>
+                  <li><strong>Right Slider:</strong> Hold/drag upper half for <strong>FORWARD</strong>, hold/drag lower half for <strong>REVERSE/BRAKE</strong>.</li>
+                  <li><strong>Desktop Keys:</strong> <code>W</code> / <code>S</code> / <code>A</code> / <code>D</code> or Arrow Keys, <code>Space</code> for E-Brake.</li>
                 </ul>
               </div>
 
@@ -218,14 +166,14 @@ export function App() {
                 <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
                   <li>Ram into concrete walls, ramps, or barrels to trigger <strong>real-time vertex dent crumpling</strong>.</li>
                   <li>Heavy impacts break off modular <strong>wings, bumpers, and scoops</strong> into dynamic physics pieces.</li>
-                  <li>Click <strong>🔧 Repair</strong> to smoothly lerp sheet metal back to perfection.</li>
+                  <li>Click <strong>🔧 Repair</strong> in the Tools drawer to smoothly lerp sheet metal back to perfection.</li>
                 </ul>
               </div>
 
               <div>
                 <strong style={{ color: 'var(--accent-amber)' }}>📱 WebXR AR Mode:</strong>
                 <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
-                  <li>On supported mobile devices (Android Chrome with ARCore over HTTPS), tap <strong>◈ Enter AR</strong>.</li>
+                  <li>Tap <strong>◈ Enter AR</strong> on supported mobile devices.</li>
                   <li>Point your camera at a floor or tabletop until the holographic reticle locks on, then tap to place your RC car!</li>
                 </ul>
               </div>

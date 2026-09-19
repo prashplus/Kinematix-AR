@@ -2,18 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 
 /**
  * Kinematix AR - Dual-Stick Virtual RC Transmitter
- * Proportional steering joystick (left) + Proportional throttle/brake trigger (right)
- * + Multi-touch support & Keyboard fallback (WASD / Arrows / Space)
+ * Robust Multi-Touch via PointerEvents (with PointerCapture per finger),
+ * Proportional Steering (left) + Proportional Throttle & Reverse (right)
+ * + Keyboard fallback (WASD / Arrows / Space)
  */
 export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
-  const [steerVal, setSteerVal] = useState(0); // -1 (full left) to 1 (full right)
-  const [throttleVal, setThrottleVal] = useState(0); // -1 (reverse/brake) to 1 (full throttle)
+  const [steerVal, setSteerVal] = useState(0); // -1 (left) to 1 (right)
+  const [throttleVal, setThrottleVal] = useState(0); // -1 (reverse/brake) to 1 (throttle)
   const [handbrake, setHandbrake] = useState(false);
 
-  // References for touch tracking
   const leftStickRef = useRef(null);
   const rightStickRef = useRef(null);
-  const activeTouchesRef = useRef({ left: null, right: null });
+  const leftPointerId = useRef(null);
+  const rightPointerId = useRef(null);
 
   // Sync inputs to parent callback
   useEffect(() => {
@@ -67,40 +68,79 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
     };
   }, []);
 
-  // Virtual Steering Joystick Touch Handler (Left)
-  const handleLeftTouchMove = (e) => {
+  // Left Steering Pointer Handlers (Multi-Touch Independent)
+  const updateSteerFromClientX = (clientX) => {
     if (!leftStickRef.current) return;
-    const touch = e.touches[0];
     const rect = leftStickRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
-    const maxRadius = rect.width / 2;
-
-    const deltaX = touch.clientX - centerX;
-    const normalized = Math.max(-1, Math.min(1, deltaX / maxRadius));
-    setSteerVal(normalized);
+    const maxRadius = rect.width * 0.42;
+    const deltaX = clientX - centerX;
+    const norm = Math.max(-1, Math.min(1, deltaX / maxRadius));
+    setSteerVal(norm);
   };
 
-  const handleLeftTouchEnd = () => {
-    // Spring back to center
-    setSteerVal(0);
+  const handleLeftPointerDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {}
+    leftPointerId.current = e.pointerId;
+    updateSteerFromClientX(e.clientX);
   };
 
-  // Virtual Throttle Trigger Touch Handler (Right)
-  const handleRightTouchMove = (e) => {
+  const handleLeftPointerMove = (e) => {
+    if (leftPointerId.current !== e.pointerId) return;
+    e.preventDefault();
+    updateSteerFromClientX(e.clientX);
+  };
+
+  const handleLeftPointerUp = (e) => {
+    if (leftPointerId.current === e.pointerId) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+      leftPointerId.current = null;
+      setSteerVal(0);
+    }
+  };
+
+  // Right Throttle Pointer Handlers (Multi-Touch Independent)
+  const updateThrottleFromClientY = (clientY) => {
     if (!rightStickRef.current) return;
-    const touch = e.touches[0];
     const rect = rightStickRef.current.getBoundingClientRect();
     const centerY = rect.top + rect.height / 2;
-    const maxRadius = rect.height / 2;
-
-    // Up is positive throttle, Down is reverse/brake
-    const deltaY = -(touch.clientY - centerY);
-    const normalized = Math.max(-1, Math.min(1, deltaY / maxRadius));
-    setThrottleVal(normalized);
+    // Dragging up is forward (+), dragging down is reverse/brake (-)
+    const deltaY = -(clientY - centerY);
+    const maxRadius = rect.height * 0.38;
+    const norm = Math.max(-1, Math.min(1, deltaY / maxRadius));
+    setThrottleVal(norm);
   };
 
-  const handleRightTouchEnd = () => {
-    setThrottleVal(0);
+  const handleRightPointerDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {}
+    rightPointerId.current = e.pointerId;
+    updateThrottleFromClientY(e.clientY);
+  };
+
+  const handleRightPointerMove = (e) => {
+    if (rightPointerId.current !== e.pointerId) return;
+    e.preventDefault();
+    updateThrottleFromClientY(e.clientY);
+  };
+
+  const handleRightPointerUp = (e) => {
+    if (rightPointerId.current === e.pointerId) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+      rightPointerId.current = null;
+      setThrottleVal(0);
+    }
   };
 
   if (isInspectMode) return null;
@@ -108,41 +148,29 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
   return (
     <div style={{
       position: 'absolute',
-      bottom: '18px',
+      bottom: '16px',
       left: '0',
       right: '0',
       display: 'flex',
       justifyContent: 'space-between',
-      padding: '0 24px',
+      alignItems: 'flex-end',
+      padding: '0 16px',
       pointerEvents: 'none',
-      zIndex: 20
+      zIndex: 30,
+      userSelect: 'none',
+      WebkitUserSelect: 'none'
     }}>
       {/* Left Steering Wheel / Joystick */}
       <div style={{ pointerEvents: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div
           ref={leftStickRef}
-          onTouchMove={handleLeftTouchMove}
-          onTouchEnd={handleLeftTouchEnd}
-          onTouchCancel={handleLeftTouchEnd}
-          onMouseDown={(e) => {
-            const handleMouseMove = (moveEvent) => {
-              if (!leftStickRef.current) return;
-              const rect = leftStickRef.current.getBoundingClientRect();
-              const centerX = rect.left + rect.width / 2;
-              const deltaX = moveEvent.clientX - centerX;
-              setSteerVal(Math.max(-1, Math.min(1, deltaX / (rect.width / 2))));
-            };
-            const handleMouseUp = () => {
-              setSteerVal(0);
-              window.removeEventListener('mousemove', handleMouseMove);
-              window.removeEventListener('mouseup', handleMouseUp);
-            };
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-          }}
+          onPointerDown={handleLeftPointerDown}
+          onPointerMove={handleLeftPointerMove}
+          onPointerUp={handleLeftPointerUp}
+          onPointerCancel={handleLeftPointerUp}
           style={{
-            width: '120px',
-            height: '120px',
+            width: '114px',
+            height: '114px',
             borderRadius: '50%',
             background: 'var(--stick-bg)',
             border: '2px solid var(--stick-border)',
@@ -155,21 +183,25 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
             touchAction: 'none'
           }}
         >
+          {/* Subtle guide tick marks */}
+          <div style={{ position: 'absolute', width: '80%', height: '1px', backgroundColor: 'var(--panel-border)' }} />
+
           {/* Steering Hub & Thumbstick Knob */}
           <div style={{
-            width: '46px',
-            height: '46px',
+            width: '50px',
+            height: '50px',
             borderRadius: '50%',
             background: 'linear-gradient(135deg, var(--accent-cyan) 0%, #0284c7 100%)',
-            boxShadow: '0 2px 12px rgba(2, 132, 199, 0.4)',
-            transform: `translateX(${steerVal * 36}px)`,
-            transition: steerVal === 0 ? 'transform 0.15s ease-out' : 'none',
+            boxShadow: '0 4px 16px rgba(2, 132, 199, 0.4)',
+            transform: `translateX(${steerVal * 34}px)`,
+            transition: steerVal === 0 ? 'transform 0.12s ease-out' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#ffffff',
             fontSize: '11px',
-            fontWeight: '800'
+            fontWeight: '800',
+            pointerEvents: 'none'
           }}>
             ◀ ▶
           </div>
@@ -178,32 +210,32 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
           marginTop: '6px',
           fontSize: '11px',
           fontWeight: '700',
-          letterSpacing: '0.08em',
+          letterSpacing: '0.06em',
           color: 'var(--accent-cyan)',
           textShadow: '0 0 8px var(--panel-glow)'
         }}>
-          STEERING [A/D]
+          STEERING
         </span>
       </div>
 
       {/* Handbrake Button Center */}
-      <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'flex-end', paddingBottom: '8px' }}>
+      <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'flex-end', paddingBottom: '4px' }}>
         <button
           className="btn-action glass-pill"
-          onMouseDown={() => setHandbrake(true)}
-          onMouseUp={() => setHandbrake(false)}
-          onTouchStart={() => setHandbrake(true)}
-          onTouchEnd={() => setHandbrake(false)}
+          onPointerDown={(e) => { e.preventDefault(); setHandbrake(true); }}
+          onPointerUp={() => setHandbrake(false)}
+          onPointerCancel={() => setHandbrake(false)}
           style={{
-            padding: '10px 18px',
+            padding: '12px 18px',
             fontSize: '12px',
             fontWeight: '800',
             color: handbrake ? 'var(--accent-red)' : 'var(--text-primary)',
             borderColor: handbrake ? 'var(--accent-red)' : 'var(--panel-border)',
-            boxShadow: handbrake ? '0 0 16px rgba(220, 38, 38, 0.4)' : 'none'
+            boxShadow: handbrake ? '0 0 16px rgba(220, 38, 38, 0.4)' : 'none',
+            touchAction: 'none'
           }}
         >
-          (P) E-BRAKE
+          (P) BRAKE
         </button>
       </div>
 
@@ -211,74 +243,86 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
       <div style={{ pointerEvents: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div
           ref={rightStickRef}
-          onTouchMove={handleRightTouchMove}
-          onTouchEnd={handleRightTouchEnd}
-          onTouchCancel={handleRightTouchEnd}
-          onMouseDown={(e) => {
-            const handleMouseMove = (moveEvent) => {
-              if (!rightStickRef.current) return;
-              const rect = rightStickRef.current.getBoundingClientRect();
-              const centerY = rect.top + rect.height / 2;
-              const deltaY = -(moveEvent.clientY - centerY);
-              setThrottleVal(Math.max(-1, Math.min(1, deltaY / (rect.height / 2))));
-            };
-            const handleMouseUp = () => {
-              setThrottleVal(0);
-              window.removeEventListener('mousemove', handleMouseMove);
-              window.removeEventListener('mouseup', handleMouseUp);
-            };
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-          }}
+          onPointerDown={handleRightPointerDown}
+          onPointerMove={handleRightPointerMove}
+          onPointerUp={handleRightPointerUp}
+          onPointerCancel={handleRightPointerUp}
           style={{
-            width: '74px',
-            height: '140px',
-            borderRadius: '37px',
+            width: '84px',
+            height: '148px',
+            borderRadius: '42px',
             background: 'var(--stick-bg)',
             border: '2px solid var(--stick-border)',
             boxShadow: 'var(--stick-shadow)',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 0',
             position: 'relative',
             cursor: 'grab',
             touchAction: 'none'
           }}
         >
-          {/* Throttle Knob */}
+          {/* Top Hold Target: Forward */}
           <div style={{
-            width: '54px',
-            height: '42px',
-            borderRadius: '21px',
-            background: throttleVal >= 0
+            fontSize: '10px',
+            fontWeight: '800',
+            color: throttleVal > 0.1 ? 'var(--accent-green)' : 'var(--text-muted)',
+            pointerEvents: 'none'
+          }}>
+            ▲ FWD
+          </div>
+
+          {/* Center Draggable Knob */}
+          <div style={{
+            width: '68px',
+            height: '46px',
+            borderRadius: '23px',
+            background: throttleVal > 0.05
               ? 'linear-gradient(135deg, var(--accent-green) 0%, #0284c7 100%)'
-              : 'linear-gradient(135deg, var(--accent-red) 0%, var(--accent-amber) 100%)',
-            boxShadow: throttleVal >= 0
-              ? '0 2px 12px rgba(22, 163, 74, 0.4)'
-              : '0 2px 12px rgba(220, 38, 38, 0.4)',
+              : throttleVal < -0.05
+              ? 'linear-gradient(135deg, var(--accent-red) 0%, var(--accent-amber) 100%)'
+              : 'linear-gradient(135deg, rgba(2, 132, 199, 0.85) 0%, rgba(37, 99, 235, 0.85) 100%)',
+            boxShadow: throttleVal > 0.05
+              ? '0 4px 16px rgba(22, 163, 74, 0.5)'
+              : throttleVal < -0.05
+              ? '0 4px 16px rgba(220, 38, 38, 0.5)'
+              : '0 2px 10px rgba(0, 0, 0, 0.15)',
             transform: `translateY(${-throttleVal * 44}px)`,
-            transition: throttleVal === 0 ? 'transform 0.15s ease-out' : 'none',
+            transition: throttleVal === 0 ? 'transform 0.12s ease-out' : 'none',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#ffffff',
-            fontSize: '10px',
-            fontWeight: '900'
+            fontSize: '11px',
+            fontWeight: '900',
+            letterSpacing: '0.04em',
+            pointerEvents: 'none'
           }}>
-            <span>▲ FWD</span>
-            <span>▼ REV</span>
+            {throttleVal > 0.1 ? '▲ GO' : throttleVal < -0.1 ? '▼ REV' : 'DRIVE'}
+          </div>
+
+          {/* Bottom Hold Target: Reverse */}
+          <div style={{
+            fontSize: '10px',
+            fontWeight: '800',
+            color: throttleVal < -0.1 ? 'var(--accent-red)' : 'var(--text-muted)',
+            pointerEvents: 'none'
+          }}>
+            ▼ REV
           </div>
         </div>
+
         <span style={{
           marginTop: '6px',
           fontSize: '11px',
           fontWeight: '700',
-          letterSpacing: '0.08em',
+          letterSpacing: '0.06em',
           color: 'var(--accent-green)',
           textShadow: '0 0 8px var(--panel-glow)'
         }}>
-          THROTTLE [W/S]
+          THROTTLE
         </span>
       </div>
     </div>
