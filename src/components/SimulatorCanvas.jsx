@@ -19,6 +19,7 @@ export const SimulatorCanvas = ({
   vehicleId,
   isInspectMode,
   inputs,
+  theme = 'light',
   onTelemetryUpdate,
   onARStateChange,
   propsAction,
@@ -37,6 +38,9 @@ export const SimulatorCanvas = ({
     propsManager: null,
     xrManager: null,
     dirLight: null,
+    hemiLight: null,
+    gridHelper: null,
+    groundMesh: null,
     orbitAngles: { theta: 0.4, phi: 0.35, distance: 3.2 },
     isDragging: false,
     prevMouse: { x: 0, y: 0 },
@@ -53,9 +57,11 @@ export const SimulatorCanvas = ({
     const width = containerRef.current.clientWidth;
     const height = containerRef.current.clientHeight;
 
+    const isLight = theme === 'light';
+
     // 1. Scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x07090e);
+    scene.background = new THREE.Color(isLight ? 0xf1f5f9 : 0x07090e);
 
     // 2. Camera
     const camera = new THREE.PerspectiveCamera(60, width / height, 0.05, 100);
@@ -72,17 +78,21 @@ export const SimulatorCanvas = ({
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = isLight ? 1.05 : 1.15;
     renderer.xr.enabled = true;
 
     containerRef.current.innerHTML = '';
     containerRef.current.appendChild(renderer.domElement);
 
     // 4. Lighting
-    const hemiLight = new THREE.HemisphereLight(0xddeeff, 0x111625, 0.9);
+    const hemiLight = new THREE.HemisphereLight(
+      isLight ? 0xffffff : 0xddeeff,
+      isLight ? 0xcbd5e1 : 0x111625,
+      isLight ? 1.2 : 0.9
+    );
     scene.add(hemiLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
+    const dirLight = new THREE.DirectionalLight(isLight ? 0xfffcf5 : 0xffffff, isLight ? 2.2 : 1.8);
     dirLight.position.set(5, 10, 5);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
@@ -96,8 +106,26 @@ export const SimulatorCanvas = ({
     dirLight.shadow.bias = -0.0004;
     scene.add(dirLight);
 
+    // Subtle concrete floor for non-XR mode that receives shadows
+    const groundGeom = new THREE.PlaneGeometry(60, 60);
+    groundGeom.rotateX(-Math.PI / 2);
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: isLight ? 0xe2e8f0 : 0x0c1017,
+      roughness: 0.95,
+      metalness: 0.05
+    });
+    const groundMesh = new THREE.Mesh(groundGeom, groundMat);
+    groundMesh.receiveShadow = true;
+    groundMesh.position.y = -0.002;
+    scene.add(groundMesh);
+
     // Grid Floor for Non-XR mode
-    const gridHelper = new THREE.GridHelper(40, 40, 0x00e5ff, 0x1e293b);
+    const gridHelper = new THREE.GridHelper(
+      40,
+      40,
+      isLight ? 0x0284c7 : 0x00e5ff,
+      isLight ? 0x94a3b8 : 0x1e293b
+    );
     gridHelper.position.y = 0.001;
     scene.add(gridHelper);
 
@@ -128,12 +156,14 @@ export const SimulatorCanvas = ({
     xrManager.onSessionStarted = () => {
       scene.background = null; // Transparent pass-through for camera feed
       gridHelper.visible = false;
+      groundMesh.visible = false;
       if (onARStateChange) onARStateChange({ supported: true, active: true });
     };
 
     xrManager.onSessionEnded = () => {
-      scene.background = new THREE.Color(0x07090e);
+      scene.background = new THREE.Color(theme === 'light' ? 0xf1f5f9 : 0x07090e);
       gridHelper.visible = true;
+      groundMesh.visible = true;
       if (onARStateChange) onARStateChange({ supported: true, active: false });
     };
 
@@ -156,7 +186,9 @@ export const SimulatorCanvas = ({
       propsManager,
       xrManager,
       dirLight,
-      gridHelper
+      hemiLight,
+      gridHelper,
+      groundMesh
     };
 
     // Spawn Initial Vehicle
@@ -314,6 +346,33 @@ export const SimulatorCanvas = ({
       spawnVehicle(vehicleId);
     }
   }, [vehicleId]);
+
+  // Update scene lighting and background when theme changes
+  useEffect(() => {
+    const { scene, renderer, hemiLight, dirLight, groundMesh } = sysRef.current;
+    if (!scene) return;
+
+    const isLight = theme === 'light';
+
+    if (renderer && !renderer.xr.isPresenting) {
+      scene.background = new THREE.Color(isLight ? 0xf1f5f9 : 0x07090e);
+    }
+
+    if (hemiLight) {
+      hemiLight.color.set(isLight ? 0xffffff : 0xddeeff);
+      hemiLight.groundColor.set(isLight ? 0xcbd5e1 : 0x111625);
+      hemiLight.intensity = isLight ? 1.2 : 0.9;
+    }
+
+    if (dirLight) {
+      dirLight.color.set(isLight ? 0xfffcf5 : 0xffffff);
+      dirLight.intensity = isLight ? 2.2 : 1.8;
+    }
+
+    if (groundMesh && groundMesh.material) {
+      groundMesh.material.color.set(isLight ? 0xe2e8f0 : 0x0c1017);
+    }
+  }, [theme]);
 
   // Handle external props actions
   useEffect(() => {

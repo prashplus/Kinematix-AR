@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SimulatorCanvas } from './components/SimulatorCanvas';
 import { TransmitterControls } from './components/TransmitterControls';
 import { TelemetryHUD } from './components/TelemetryHUD';
@@ -6,14 +6,25 @@ import { InspectionOverlay } from './components/InspectionOverlay';
 import { VehicleCarousel } from './components/VehicleCarousel';
 import { VEHICLE_ARCHETYPES } from './vehicles/VehicleConfigs';
 import { soundManager } from './audio/RCAudioEngine';
-import { Volume2, VolumeX, HelpCircle } from 'lucide-react';
+import { Volume2, VolumeX, HelpCircle, Sun, Moon } from 'lucide-react';
 
 export function App() {
+  const [theme, setTheme] = useState('light');
   const [vehicleId, setVehicleId] = useState('trophy_truck');
   const [isInspectMode, setIsInspectMode] = useState(false);
   const [isCarouselOpen, setIsCarouselOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+
+  // Sync data-theme attribute on document root
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    soundManager.playClick();
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   const [telemetry, setTelemetry] = useState({
     speedKmH: 0,
@@ -47,7 +58,7 @@ export function App() {
         width: '100vw',
         height: '100vh',
         overflow: 'hidden',
-        backgroundColor: '#07090e'
+        backgroundColor: 'var(--bg-color)'
       }}
     >
       {/* 3D WebGL / WebXR Simulation Canvas */}
@@ -55,6 +66,7 @@ export function App() {
         vehicleId={vehicleId}
         isInspectMode={isInspectMode}
         inputs={inputsRef}
+        theme={theme}
         onTelemetryUpdate={setTelemetry}
         onARStateChange={setArState}
         propsAction={propsAction}
@@ -77,14 +89,14 @@ export function App() {
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
-          border: '1px solid rgba(0, 229, 255, 0.25)',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)'
+          border: '1px solid var(--panel-border)',
+          boxShadow: 'var(--panel-shadow)'
         }}>
           <span style={{
             fontSize: '13px',
             fontWeight: '900',
             letterSpacing: '0.15em',
-            background: 'linear-gradient(90deg, #00e5ff, #2979ff)',
+            background: 'linear-gradient(90deg, var(--accent-cyan), var(--accent-blue))',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             textTransform: 'uppercase'
@@ -97,6 +109,16 @@ export function App() {
           </span>
         </div>
 
+        {/* Theme Toggle (Light / Dark) */}
+        <button
+          onClick={toggleTheme}
+          className="btn-action glass-pill"
+          style={{ width: '36px', height: '36px', borderRadius: '50%', padding: 0 }}
+          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+        >
+          {theme === 'light' ? <Moon size={16} color="var(--accent-purple)" /> : <Sun size={16} color="var(--accent-amber)" />}
+        </button>
+
         {/* Audio Toggle */}
         <button
           onClick={handleToggleMute}
@@ -104,7 +126,7 @@ export function App() {
           style={{ width: '36px', height: '36px', borderRadius: '50%', padding: 0 }}
           title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
         >
-          {isMuted ? <VolumeX size={15} color="#ff1744" /> : <Volume2 size={15} color="#00e5ff" />}
+          {isMuted ? <VolumeX size={15} color="var(--accent-red)" /> : <Volume2 size={15} color="var(--accent-cyan)" />}
         </button>
 
         {/* Controls Help */}
@@ -114,7 +136,7 @@ export function App() {
           style={{ width: '36px', height: '36px', borderRadius: '50%', padding: 0 }}
           title="Controls Guide"
         >
-          <HelpCircle size={15} color="#94a3b8" />
+          <HelpCircle size={15} color="var(--text-secondary)" />
         </button>
       </div>
 
@@ -165,7 +187,7 @@ export function App() {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.7)',
+          backgroundColor: 'rgba(15, 23, 42, 0.45)',
           backdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
@@ -175,7 +197,7 @@ export function App() {
         }}>
           <div className="glass-panel" style={{ maxWidth: '440px', width: '100%', padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#fff' }}>HOW TO PLAY</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-primary)' }}>HOW TO PLAY</h3>
               <button onClick={() => setShowHelp(false)} className="btn-action glass-pill" style={{ width: '32px', height: '32px', padding: 0 }}>✕</button>
             </div>
 

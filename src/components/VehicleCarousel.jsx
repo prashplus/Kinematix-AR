@@ -33,7 +33,7 @@ export const VehicleCarousel = ({ currentVehicleId, onSelectVehicle, isVisible, 
       left: '0',
       right: '0',
       bottom: '0',
-      backgroundColor: 'rgba(5, 7, 12, 0.75)',
+      backgroundColor: 'rgba(15, 23, 42, 0.45)',
       backdropFilter: 'blur(12px)',
       display: 'flex',
       alignItems: 'center',
@@ -48,8 +48,8 @@ export const VehicleCarousel = ({ currentVehicleId, onSelectVehicle, isVisible, 
         display: 'flex',
         flexDirection: 'column',
         gap: '20px',
-        border: '1px solid rgba(0, 229, 255, 0.3)',
-        boxShadow: '0 12px 48px rgba(0, 229, 255, 0.2)'
+        border: '1px solid var(--panel-border)',
+        boxShadow: 'var(--panel-shadow)'
       }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -57,7 +57,7 @@ export const VehicleCarousel = ({ currentVehicleId, onSelectVehicle, isVisible, 
             <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: '800', letterSpacing: '0.1em' }}>
               VEHICLE ROSTER
             </span>
-            <h2 style={{ fontSize: '24px', fontWeight: '800', margin: '2px 0 0 0', color: '#fff' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '800', margin: '2px 0 0 0', color: 'var(--text-primary)' }}>
               {selected.name}
             </h2>
             <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
@@ -90,9 +90,9 @@ export const VehicleCarousel = ({ currentVehicleId, onSelectVehicle, isVisible, 
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Top Speed</span>
-              <span style={{ fontWeight: '700', color: '#fff' }}>{selected.engine.topSpeedKmH} km/h</span>
+              <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{selected.engine.topSpeedKmH} km/h</span>
             </div>
-            <div style={{ height: '6px', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ height: '6px', backgroundColor: 'var(--panel-border)', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{
                 width: `${(selected.engine.topSpeedKmH / 85) * 100}%`,
                 height: '100%',
@@ -105,9 +105,9 @@ export const VehicleCarousel = ({ currentVehicleId, onSelectVehicle, isVisible, 
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Suspension Travel</span>
-              <span style={{ fontWeight: '700', color: '#fff' }}>{Math.round(selected.suspension.maxSuspensionTravel * 100)} cm</span>
+              <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{Math.round(selected.suspension.maxSuspensionTravel * 100)} cm</span>
             </div>
-            <div style={{ height: '6px', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ height: '6px', backgroundColor: 'var(--panel-border)', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{
                 width: `${(selected.suspension.maxSuspensionTravel / 0.35) * 100}%`,
                 height: '100%',
@@ -120,11 +120,11 @@ export const VehicleCarousel = ({ currentVehicleId, onSelectVehicle, isVisible, 
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Lateral Slip & Oversteer</span>
-              <span style={{ fontWeight: '700', color: '#fff' }}>
+              <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                 {selected.id === 'drift_muscle' ? 'Extreme Drift' : selected.id === 'trophy_truck' ? 'High Body Roll' : 'Razor Grip'}
               </span>
             </div>
-            <div style={{ height: '6px', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ height: '6px', backgroundColor: 'var(--panel-border)', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{
                 width: selected.id === 'drift_muscle' ? '92%' : selected.id === 'trophy_truck' ? '65%' : '20%',
                 height: '100%',

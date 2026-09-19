@@ -49,7 +49,7 @@ export const TelemetryHUD = ({ telemetry, vehicleConfig, isInspectMode }) => {
             <span style={{
               fontSize: '32px',
               fontWeight: '900',
-              color: '#ffffff',
+              color: 'var(--text-primary)',
               lineHeight: '1',
               fontFamily: 'var(--font-main)'
             }}>
@@ -84,7 +84,7 @@ export const TelemetryHUD = ({ telemetry, vehicleConfig, isInspectMode }) => {
           <div style={{
             width: '100%',
             height: '6px',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            backgroundColor: 'var(--panel-border)',
             borderRadius: '3px',
             overflow: 'hidden'
           }}>
@@ -92,8 +92,8 @@ export const TelemetryHUD = ({ telemetry, vehicleConfig, isInspectMode }) => {
               width: `${rpmPercent}%`,
               height: '100%',
               background: rpmPercent > 80
-                ? 'linear-gradient(90deg, #00e5ff, #ff1744)'
-                : 'linear-gradient(90deg, #00e5ff, #00e676)',
+                ? 'linear-gradient(90deg, #0284c7, var(--accent-red))'
+                : 'linear-gradient(90deg, #0284c7, var(--accent-green))',
               transition: 'width 0.05s ease-out'
             }} />
           </div>
@@ -125,7 +125,7 @@ export const TelemetryHUD = ({ telemetry, vehicleConfig, isInspectMode }) => {
                 <div style={{
                   flex: 1,
                   height: '5px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: 'var(--panel-border)',
                   borderRadius: '3px',
                   overflow: 'hidden'
                 }}>

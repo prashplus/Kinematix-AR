@@ -144,9 +144,9 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
             width: '120px',
             height: '120px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(13, 17, 27, 0.85) 0%, rgba(9, 13, 22, 0.95) 100%)',
-            border: '2px solid rgba(0, 229, 255, 0.35)',
-            boxShadow: '0 8px 32px rgba(0, 229, 255, 0.15), inset 0 0 16px rgba(0, 0, 0, 0.6)',
+            background: 'var(--stick-bg)',
+            border: '2px solid var(--stick-border)',
+            boxShadow: 'var(--stick-shadow)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -160,14 +160,14 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
             width: '46px',
             height: '46px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #00e5ff 0%, #0091ea 100%)',
-            boxShadow: '0 0 16px rgba(0, 229, 255, 0.8)',
+            background: 'linear-gradient(135deg, var(--accent-cyan) 0%, #0284c7 100%)',
+            boxShadow: '0 2px 12px rgba(2, 132, 199, 0.4)',
             transform: `translateX(${steerVal * 36}px)`,
             transition: steerVal === 0 ? 'transform 0.15s ease-out' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#060913',
+            color: '#ffffff',
             fontSize: '11px',
             fontWeight: '800'
           }}>
@@ -180,7 +180,7 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
           fontWeight: '700',
           letterSpacing: '0.08em',
           color: 'var(--accent-cyan)',
-          textShadow: '0 0 8px rgba(0, 229, 255, 0.4)'
+          textShadow: '0 0 8px var(--panel-glow)'
         }}>
           STEERING [A/D]
         </span>
@@ -198,9 +198,9 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
             padding: '10px 18px',
             fontSize: '12px',
             fontWeight: '800',
-            color: handbrake ? '#ff1744' : '#f8fafc',
-            borderColor: handbrake ? '#ff1744' : 'rgba(255, 255, 255, 0.2)',
-            boxShadow: handbrake ? '0 0 16px rgba(255, 23, 68, 0.6)' : 'none'
+            color: handbrake ? 'var(--accent-red)' : 'var(--text-primary)',
+            borderColor: handbrake ? 'var(--accent-red)' : 'var(--panel-border)',
+            boxShadow: handbrake ? '0 0 16px rgba(220, 38, 38, 0.4)' : 'none'
           }}
         >
           (P) E-BRAKE
@@ -234,9 +234,9 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
             width: '74px',
             height: '140px',
             borderRadius: '37px',
-            background: 'radial-gradient(circle, rgba(13, 17, 27, 0.85) 0%, rgba(9, 13, 22, 0.95) 100%)',
-            border: '2px solid rgba(0, 230, 118, 0.35)',
-            boxShadow: '0 8px 32px rgba(0, 230, 118, 0.15), inset 0 0 16px rgba(0, 0, 0, 0.6)',
+            background: 'var(--stick-bg)',
+            border: '2px solid var(--stick-border)',
+            boxShadow: 'var(--stick-shadow)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -251,18 +251,18 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
             height: '42px',
             borderRadius: '21px',
             background: throttleVal >= 0
-              ? 'linear-gradient(135deg, #00e676 0%, #00b0ff 100%)'
-              : 'linear-gradient(135deg, #ff1744 0%, #ff9100 100%)',
+              ? 'linear-gradient(135deg, var(--accent-green) 0%, #0284c7 100%)'
+              : 'linear-gradient(135deg, var(--accent-red) 0%, var(--accent-amber) 100%)',
             boxShadow: throttleVal >= 0
-              ? '0 0 16px rgba(0, 230, 118, 0.8)'
-              : '0 0 16px rgba(255, 23, 68, 0.8)',
+              ? '0 2px 12px rgba(22, 163, 74, 0.4)'
+              : '0 2px 12px rgba(220, 38, 38, 0.4)',
             transform: `translateY(${-throttleVal * 44}px)`,
             transition: throttleVal === 0 ? 'transform 0.15s ease-out' : 'none',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#060913',
+            color: '#ffffff',
             fontSize: '10px',
             fontWeight: '900'
           }}>
@@ -276,7 +276,7 @@ export const TransmitterControls = ({ onInputChange, isInspectMode }) => {
           fontWeight: '700',
           letterSpacing: '0.08em',
           color: 'var(--accent-green)',
-          textShadow: '0 0 8px rgba(0, 230, 118, 0.4)'
+          textShadow: '0 0 8px var(--panel-glow)'
         }}>
           THROTTLE [W/S]
         </span>
